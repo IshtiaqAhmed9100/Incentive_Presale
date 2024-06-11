@@ -8,9 +8,7 @@ import {
   PricingUpdated,
   PurchasedWithClaimAmount,
   PurchasedWithETH,
-  PurchasedWithETHForNFT,
   PurchasedWithToken,
-  PurchasedWithTokenForNFT,
   RoundCreated,
   RoundUpdated,
   SignerUpdated,
@@ -210,58 +208,6 @@ export function createPurchasedWithETHEvent(
   return purchasedWithEthEvent
 }
 
-export function createPurchasedWithETHForNFTEvent(
-  by: Address,
-  code: string,
-  amountInETH: BigInt,
-  ethPrice: BigInt,
-  round: BigInt,
-  roundPrice: BigInt,
-  nftAmounts: Array<BigInt>
-): PurchasedWithETHForNFT {
-  let purchasedWithEthForNftEvent = changetype<PurchasedWithETHForNFT>(
-    newMockEvent()
-  )
-
-  purchasedWithEthForNftEvent.parameters = new Array()
-
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam("by", ethereum.Value.fromAddress(by))
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam("code", ethereum.Value.fromString(code))
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "amountInETH",
-      ethereum.Value.fromUnsignedBigInt(amountInETH)
-    )
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "ethPrice",
-      ethereum.Value.fromUnsignedBigInt(ethPrice)
-    )
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam("round", ethereum.Value.fromUnsignedBigInt(round))
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "roundPrice",
-      ethereum.Value.fromUnsignedBigInt(roundPrice)
-    )
-  )
-  purchasedWithEthForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "nftAmounts",
-      ethereum.Value.fromUnsignedBigIntArray(nftAmounts)
-    )
-  )
-
-  return purchasedWithEthForNftEvent
-}
-
 export function createPurchasedWithTokenEvent(
   token: Address,
   tokenPrice: BigInt,
@@ -307,62 +253,6 @@ export function createPurchasedWithTokenEvent(
   )
 
   return purchasedWithTokenEvent
-}
-
-export function createPurchasedWithTokenForNFTEvent(
-  token: Address,
-  tokenPrice: BigInt,
-  by: Address,
-  code: string,
-  amountPurchased: BigInt,
-  round: BigInt,
-  roundPrice: BigInt,
-  nftAmounts: Array<BigInt>
-): PurchasedWithTokenForNFT {
-  let purchasedWithTokenForNftEvent = changetype<PurchasedWithTokenForNFT>(
-    newMockEvent()
-  )
-
-  purchasedWithTokenForNftEvent.parameters = new Array()
-
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam("token", ethereum.Value.fromAddress(token))
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "tokenPrice",
-      ethereum.Value.fromUnsignedBigInt(tokenPrice)
-    )
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam("by", ethereum.Value.fromAddress(by))
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam("code", ethereum.Value.fromString(code))
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "amountPurchased",
-      ethereum.Value.fromUnsignedBigInt(amountPurchased)
-    )
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam("round", ethereum.Value.fromUnsignedBigInt(round))
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "roundPrice",
-      ethereum.Value.fromUnsignedBigInt(roundPrice)
-    )
-  )
-  purchasedWithTokenForNftEvent.parameters.push(
-    new ethereum.EventParam(
-      "nftAmounts",
-      ethereum.Value.fromUnsignedBigIntArray(nftAmounts)
-    )
-  )
-
-  return purchasedWithTokenForNftEvent
 }
 
 export function createRoundCreatedEvent(

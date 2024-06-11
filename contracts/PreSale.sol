@@ -79,32 +79,17 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
     /// @notice To achieve return value of required decimals while calculation
     uint256 private constant NORMALIZARION_FACTOR = 1e30;
 
-    /// @notice The array of prices of each nft
-    uint256[] public nftPricing;
-
     /// @notice Gives claim info of user in every round
     mapping(address => mapping(uint32 => uint256)) public claims;
 
     /// @notice Gives info about address's permission
     mapping(address => bool) public blacklistAddress;
 
-    /// @notice Gives claim info of user nft in every round
-    mapping(address => mapping(uint32 => ClaimNFT[])) public claimNFT;
-
-    /// @member nftAmounts The nft amounts
-    /// @member roundPrice The round number
-    struct ClaimNFT {
-        uint256[] nftAmounts;
-        uint256 roundPrice;
-    }
-
     /// @member price The price of token from price feed
     /// @member normalizationFactorForToken The normalization factor to achieve return value of 18 decimals ,while calculating token purchases and always with different token decimals
-    /// @member normalizationFactorForNFT The normalization factor is the value which helps us to convert decimals of USDT to purchase token decimals and always with different token decimals
     struct TokenInfo {
         uint256 latestPrice;
         uint8 normalizationFactorForToken;
-        uint8 normalizationFactorForNFT;
     }
 
     /// @dev Emitted when token is purchased with ETH
@@ -126,29 +111,6 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         uint256 amountPurchased,
         uint256 tokenPurchased,
         uint32 indexed round
-    );
-
-    /// @dev Emitted when NFT is purchased with ETH
-    event PurchasedWithETHForNFT(
-        address indexed by,
-        string code,
-        uint256 amountInETH,
-        uint256 ethPrice,
-        uint32 indexed round,
-        uint256 roundPrice,
-        uint256[] nftAmounts
-    );
-
-    /// @dev Emitted when NFT is purchased with any token
-    event PurchasedWithTokenForNFT(
-        IERC20 indexed token,
-        uint256 tokenPrice,
-        address indexed by,
-        string code,
-        uint256 amountPurchased,
-        uint32 indexed round,
-        uint256 roundPrice,
-        uint256[] nftAmounts
     );
 
     /// @dev Emitted when tokens are purchased with claim amount
@@ -173,9 +135,6 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
     /// @dev Emitted when buying access changes
     event BuyEnableUpdated(bool oldAccess, bool newAccess);
 
-    /// @dev Emitted when NFT prices are updated
-    event PricingUpdated(uint256 oldPrice, uint256 newPrice);
-
     /// @notice Restricts when updating wallet/contract address with zero address
     modifier checkAddressZero(address which) {
         if (which == address(0)) {
@@ -198,15 +157,13 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
     /// @param claimsContractAddress The address of claim contract
     /// @param owner The address of owner wallet
     /// @param lastRound The last round created
-    /// @param nftPrices The prices of nfts
-    /// @param initMaxCap The max cap of incentiv token
+    /// @param initMaxCap The max cap of bluemoon token
     constructor(
         address fundsWalletAddress,
         address signerAddress,
         address claimsContractAddress,
         address owner,
         uint32 lastRound,
-        uint256[] memory nftPrices,
         uint256 initMaxCap
     ) Rounds(lastRound) Ownable(owner) {
         if (fundsWalletAddress == address(0) || signerAddress == address(0) || claimsContractAddress == address(0)) {
@@ -215,13 +172,7 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         fundsWallet = fundsWalletAddress;
         signerWallet = signerAddress;
         claimsContract = claimsContractAddress;
-        if (nftPrices.length == 0) {
-            revert ZeroLengthArray();
-        }
-        for (uint256 i = 0; i < nftPrices.length; ++i) {
-            _checkValue(nftPrices[i]);
-        }
-        nftPricing = nftPrices;
+        
         _checkValue(initMaxCap);
         maxCap = initMaxCap;
     }
@@ -249,8 +200,7 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         return
             TokenInfo({
                 latestPrice: uint256(price),
-                normalizationFactorForToken: data.normalizationFactorForToken,
-                normalizationFactorForNFT: data.normalizationFactorForNFT
+                normalizationFactorForToken: data.normalizationFactorForToken
             });
     }
 
@@ -296,26 +246,6 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         }
         emit BlacklistUpdated({ which: which, accessNow: access });
         blacklistAddress[which] = access;
-    }
-
-    /// @notice Changes the nft prices
-    /// @param newPrices The new prices of nfts
-    function updatePricing(uint256[] calldata newPrices) external onlyOwner {
-        uint256[] memory oldPrices = nftPricing;
-        for (uint256 i = 0; i < newPrices.length; ++i) {
-            uint256 newPrice = newPrices[i];
-            _checkValue(newPrice);
-            emit PricingUpdated({ oldPrice: oldPrices[i], newPrice: newPrice });
-        }
-        nftPricing = newPrices;
-    }
-
-    /// @notice Returns NFT claim info of user in given round
-    /// @param buyer The address of the buyer
-    /// @param round The round number
-    function getNFTClaims(address buyer, uint32 round) external view returns (ClaimNFT[] memory) {
-        ClaimNFT[] memory nftClaim = claimNFT[buyer][round];
-        return nftClaim;
     }
 
     /// @notice Purchases presale token with ETH
@@ -428,135 +358,6 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         });
     }
 
-    /// @notice Purchases NFT with ETH
-    /// @param code The code is used to verify signature of the user
-    /// @param round The round in which user wants to purchase
-    /// @param nftAmounts The nftAmounts is array of nfts selected
-    /// @param deadline The deadline is validity of the signature
-    /// @param v The `v` signature parameter
-    /// @param r The `r` signature parameter
-    /// @param s The `s` signature parameter
-    function purchaseNFTWithETH(
-        string memory code,
-        uint32 round,
-        uint256[] calldata nftAmounts,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable canBuy nonReentrant {
-        uint256[] memory nftPrices = nftPricing;
-        _validateArrays(nftAmounts.length, nftPrices.length);
-        // The input must have been signed by the presale signer
-        _validatePurchaseWithETH(msg.value, round, deadline, code, v, r, s);
-
-        TokenInfo memory tokenInfo = getLatestPrice(ETH);
-        if (tokenInfo.latestPrice == 0) {
-            revert PriceNotFound();
-        }
-        (uint256 value, uint256 roundPrice) = _processPurchaseNFT(
-            ETH,
-            tokenInfo.latestPrice,
-            tokenInfo.normalizationFactorForNFT,
-            round,
-            nftAmounts,
-            nftPrices
-        );
-        if (msg.value < value) {
-            revert InvalidPurchase();
-        }
-        _checkValue(value);
-        uint256 amountUnused = msg.value - value;
-        if (amountUnused > 0) {
-            payable(msg.sender).sendValue(amountUnused);
-        }
-        payable(fundsWallet).sendValue(value);
-        emit PurchasedWithETHForNFT({
-            by: msg.sender,
-            code: code,
-            amountInETH: value,
-            ethPrice: tokenInfo.latestPrice,
-            round: round,
-            roundPrice: roundPrice,
-            nftAmounts: nftAmounts
-        });
-    }
-
-    /// @notice Purchases NFT with any token
-    /// @param token The purchase token
-    /// @param referenceTokenPrice The current price of token in 10 decimals
-    /// @param referenceNormalizationFactor The normalization factor
-    /// @param code The code is used to verify signature of the user
-    /// @param round The round in which user wants to purchase
-    /// @param nftAmounts The nftAmounts is array of nfts selected
-    /// @param deadline The deadline is validity of the signature
-    /// @param v The `v` signature parameter
-    /// @param r The `r` signature parameter
-    /// @param s The `s` signature parameter
-    function purchaseNFTWithToken(
-        IERC20 token,
-        uint256 referenceTokenPrice,
-        uint8 referenceNormalizationFactor,
-        string memory code,
-        uint32 round,
-        uint256[] calldata nftAmounts,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external canBuy nonReentrant {
-        uint256[] memory nftPrices = nftPricing;
-        _validateArrays(nftAmounts.length, nftPrices.length);
-        // The input must have been signed by the presale signer
-        _validatePurchaseWithToken(
-            token,
-            round,
-            deadline,
-            code,
-            referenceTokenPrice,
-            referenceNormalizationFactor,
-            v,
-            r,
-            s
-        );
-        TokenInfo memory tokenInfo = getLatestPrice(token);
-        if (tokenInfo.latestPrice != 0) {
-            if (referenceTokenPrice != 0 || referenceNormalizationFactor != 0) {
-                revert CodeSyncIssue();
-            }
-        }
-        //  If price feed isn't available,we fallback to the reference price
-        if (tokenInfo.latestPrice == 0) {
-            if (referenceTokenPrice == 0 || referenceNormalizationFactor == 0) {
-                revert ZeroValue();
-            }
-            tokenInfo.latestPrice = referenceTokenPrice;
-            tokenInfo.normalizationFactorForNFT = referenceNormalizationFactor;
-        }
-
-        (uint256 value, uint256 roundPrice) = _processPurchaseNFT(
-            token,
-            tokenInfo.latestPrice,
-            tokenInfo.normalizationFactorForNFT,
-            round,
-            nftAmounts,
-            nftPrices
-        );
-        _checkValue(value);
-
-        token.safeTransferFrom(msg.sender, fundsWallet, value);
-        emit PurchasedWithTokenForNFT({
-            token: token,
-            tokenPrice: tokenInfo.latestPrice,
-            by: msg.sender,
-            code: code,
-            amountPurchased: value,
-            round: round,
-            roundPrice: roundPrice,
-            nftAmounts: nftAmounts
-        });
-    }
-
     /// @inheritdoc IPreSale
     function purchaseWithClaim(
         IERC20 token,
@@ -649,33 +450,6 @@ contract PreSale is IPreSale, Rounds, ReentrancyGuard {
         if (signerWallet != ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(encodedMessageHash), v, r, s)) {
             revert InvalidSignature();
         }
-    }
-
-    /// @dev Process nft purchase by calculating nft prices and purchase amount
-    function _processPurchaseNFT(
-        IERC20 token,
-        uint256 price,
-        uint256 normalizationFactor,
-        uint32 round,
-        uint256[] calldata nftAmounts,
-        uint256[] memory nftPrices
-    ) private returns (uint256, uint256) {
-        uint256 value = 0;
-        uint256 totalNFTPrices = 0;
-
-        for (uint256 i = 0; i < nftPrices.length; ++i) {
-            uint256 nfts = nftAmounts[i];
-            uint256 prices = nftPrices[i];
-            //  (10**0 * 10**6 +10**10) -10**10 = 6 decimals
-            value += (nfts * prices * (10 ** (normalizationFactor))) / price;
-            totalNFTPrices += nfts * prices;
-        }
-        uint256 roundPrice = _getRoundPriceForToken(round, token);
-        uint256 incentiveTokens = (totalNFTPrices * NORMALIZARION_FACTOR) / roundPrice;
-        _updateTokenPurchases(incentiveTokens);
-        ClaimNFT memory amounts = ClaimNFT({ nftAmounts: nftAmounts, roundPrice: roundPrice });
-        claimNFT[msg.sender][round].push(amounts);
-        return (value, roundPrice);
     }
 
     /// @dev Checks that address is blacklisted or not

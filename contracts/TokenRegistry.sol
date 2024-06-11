@@ -19,12 +19,10 @@ abstract contract TokenRegistry is Ownable {
 
     /// @member priceFeed The Chainlink price feed address
     /// @member normalizationFactorForToken The normalization factor to achieve return value of 18 decimals, while calculating presale token purchases and always with different token decimals
-    /// @member normalizationFactorForNFT The normalization factor is the value which helps us to convert decimals of USDT to purchase token decimals and always with different token decimals
     /// @member tolerance The pricefeed live price should be updated in tolerance time to get better price
     struct PriceFeedData {
         AggregatorV3Interface priceFeed;
         uint8 normalizationFactorForToken;
-        uint8 normalizationFactorForNFT;
         uint256 tolerance;
     }
 
@@ -49,7 +47,6 @@ abstract contract TokenRegistry is Ownable {
             if (
                 currentPriceFeedData.priceFeed == data.priceFeed &&
                 currentPriceFeedData.normalizationFactorForToken == data.normalizationFactorForToken &&
-                currentPriceFeedData.normalizationFactorForNFT == data.normalizationFactorForNFT &&
                 currentPriceFeedData.tolerance == data.tolerance
             ) {
                 revert IdenticalValue();

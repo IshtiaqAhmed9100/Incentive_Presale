@@ -3,6 +3,9 @@
     "Claims": {
       "address": "0x23Ca79a9Bf90a4B163E0B64341D8DA10B35BeBBD",
       "startBlock": 6146509
+    },
+    "PreSale": {
+      "address": "0x23097DDB86d1a7d5A073D6eCb37FEDfA982B3B52"
     }
   }
 }

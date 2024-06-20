@@ -76,3 +76,131 @@ type SignerUpdated @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+type BlacklistUpdated @entity(immutable: true) {
+  id: Bytes!
+  which: Bytes! # address
+  accessNow: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BuyEnableUpdated @entity(immutable: true) {
+  id: Bytes!
+  oldAccess: Boolean! # bool
+  newAccess: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FundsWalletUpdated @entity(immutable: true) {
+  id: Bytes!
+  oldAddress: Bytes! # address
+  newAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PurchasedWithClaimAmount @entity(immutable: true) {
+  id: Bytes!
+  by: Bytes! # address
+  amount: BigInt! # uint256
+  token: Bytes! # address
+  round: BigInt! # uint32
+  tokenPrice: BigInt! # uint256
+  tokenPurchased: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PurchasedWithETH @entity(immutable: true) {
+  id: Bytes!
+  by: Bytes! # address
+  code: String! # string
+  amountPurchasedETH: BigInt! # uint256
+  round: BigInt! # uint32
+  roundPrice: BigInt! # uint256
+  tokenPurchased: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PurchasedWithToken @entity(immutable: true) {
+  id: Bytes!
+  token: Bytes! # address
+  tokenPrice: BigInt! # uint256
+  by: Bytes! # address
+  code: String! # string
+  amountPurchased: BigInt! # uint256
+  tokenPurchased: BigInt! # uint256
+  round: BigInt! # uint32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RoundCreated @entity(immutable: true) {
+  id: Bytes!
+  newRound: BigInt! # uint32
+  roundData_startTime: BigInt! # uint256
+  roundData_endTime: BigInt! # uint256
+  roundData_price: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RoundUpdated @entity(immutable: true) {
+  id: Bytes!
+  round: BigInt! # uint32
+  roundData_startTime: BigInt! # uint256
+  roundData_endTime: BigInt! # uint256
+  roundData_price: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PreSaleSignerUpdated @entity(immutable: true) {
+  id: Bytes!
+  oldSigner: Bytes! # address
+  newSigner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenDataAdded @entity(immutable: true) {
+  id: Bytes!
+  token: Bytes! # address
+  data_priceFeed: Bytes! # address
+  data_normalizationFactorForToken: Int! # uint8
+  data_tolerance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokensAccessUpdated @entity(immutable: true) {
+  id: Bytes!
+  round: BigInt! # uint32
+  token: Bytes! # address
+  access: Boolean! # bool
+  customPrice: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

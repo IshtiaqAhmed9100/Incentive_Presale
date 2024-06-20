@@ -1,0 +1,47 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Claims
+    network: sepolia
+    source:
+      address: "0x23Ca79a9Bf90a4B163E0B64341D8DA10B35BeBBD"
+      abi: Claims
+      startBlock: 6146509
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaimSet
+        - FundsClaimed
+        - PresaleUpdated
+        - RoleAdminChanged
+        - RoleGranted
+        - RoleRevoked
+        - RoundEnableUpdated
+        - SignerUpdated
+      abis:
+        - name: Claims
+          file: ./abis/Claims.json
+      eventHandlers:
+        - event: ClaimSet(indexed address,indexed uint32,(address,uint256))
+          handler: handleClaimSet
+        - event: FundsClaimed(indexed address,indexed uint32,address,uint256)
+          handler: handleFundsClaimed
+        - event: PresaleUpdated(address,address)
+          handler: handlePresaleUpdated
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoundEnableUpdated(bool,bool)
+          handler: handleRoundEnableUpdated
+        - event: SignerUpdated(address,address)
+          handler: handleSignerUpdated
+      file: ./src/claims.ts
